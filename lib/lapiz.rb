@@ -43,9 +43,26 @@ module Lapiz
       instance_eval "def response;@response;end"
       instance_eval &block
 
+      request_type = nil
+      unless method == :head || method == :get
+        # Attempt to find request type
+        if @response.request.options[:headers]
+          request_type = @response.request.options[:headers]["Content-Type"]
+        end
+
+        if  request_type.nil? # it was not set explicitly
+          # if body is present, assume they meant x-www-form-urlencoded
+          request_type = "x-www-form-urlencoded"
+        end
+      end
+
       group_name = group.metadata[:group_name]
       File.open("api_docs/#{group_name.gsub(/[^a-zA-Z_]+/,'_').underscore}.md", "a+") do |fp|
-        fp.puts "# #{method.to_s.upcase} #{path}"
+        fp.puts "## #{method.to_s.upcase} #{path}"
+        fp.puts
+        if request_type
+          fp.puts "+ Request (#{request_type})"
+        end
       end
     end
   end
