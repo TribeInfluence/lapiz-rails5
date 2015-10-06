@@ -31,13 +31,13 @@ class Hash
     end
 
     new_hash = new_hash.to_a.map{ |e|
-      if e[0].include?(",")
+      if e[0].to_s.include?(",")
         main = e[0].split(",").first
         rest = e[0].split(",")[1..-1]
         rest_string = rest.map{ |r| "[#{r}]" }.join("")
         ["#{main}#{rest_string}", e[1]]
       else
-        e
+        [e[0].to_s, e[1]]
       end
     }.to_h
 
@@ -70,7 +70,25 @@ module Lapiz
     http_call(:post, path, params, &block)
   end
 
+  def patch(path, params, &block)
+    http_call(:patch, path, params, &block)
+  end
+
+  def put(path, params, &block)
+    http_call(:put, path, params, &block)
+  end
+
+  def delete(path, params, &block)
+    http_call(:delete, path, params, &block)
+  end
+
   def http_call(method, path, params, &block)
+    if block.nil?
+      config = YAML.load(IO.read("config.yml"))
+      base_uri = config["server"]["base_uri"]
+      return HTTParty.send(method, base_uri + path, params)
+    end
+
     it "tests action '#{path}'", self  do |group|
       expect {
         @response = HTTParty.send(method, group.metadata[:base_uri] + path, params)
@@ -111,7 +129,7 @@ module Lapiz
           end
         end
 
-        if @response.body
+        if @response.body && (@response.code / 100 == 2)
           fp.puts
           fp.puts "+ Response #{@response.code} (#{@response.content_type})"
           fp.puts 
