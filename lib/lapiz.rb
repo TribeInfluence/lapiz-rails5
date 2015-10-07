@@ -129,6 +129,18 @@ module Lapiz
           end
         end
 
+        if @response.request.options[:headers]
+          fp.puts
+          fp.puts "+ Request"
+          fp.puts
+          fp.puts "    + Headers"
+          fp.puts
+          @response.request.options[:headers].each_pair  do |k,v|
+            fp.puts "            #{k}: #{v}"
+          end
+          fp.puts
+        end
+
         if @response.body && (@response.code / 100 == 2)
           fp.puts
           fp.puts "+ Response #{@response.code} (#{@response.content_type})"
