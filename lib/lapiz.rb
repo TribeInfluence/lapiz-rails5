@@ -82,14 +82,22 @@ module Lapiz
     http_call(:delete, path, params, &block)
   end
 
-  def http_call(method, path, params, &block)
+  def http_call(method, path_pattern, params, &block)
+    path = path_pattern
+    pattern = path_pattern
+
+    if // =~ path_pattern
+      path = path_pattern.gsub(/{([^{}]*)}/) { $1.split("=").last }       # path_pattern contains {field=default_value}. gsub it with default value 
+      pattern = path_pattern.gsub(/{([^{}]*)}/) { "{#{$1.split("=").first}}" }  # same as above, but gsub it with field
+    end
+
     if block.nil?
       config = YAML.load(IO.read("config.yml"))
       base_uri = config["server"]["base_uri"]
       return HTTParty.send(method, base_uri + path, params)
     end
 
-    it "tests action '#{path}'", self  do |group|
+    it "tests action '#{pattern}'", self  do |group|
       expect {
         @response = HTTParty.send(method, group.metadata[:base_uri] + path, params)
       }.to_not raise_error
@@ -111,20 +119,34 @@ module Lapiz
 
       group_name = group.metadata[:group_name]
       File.open("api_docs/#{group_name.gsub(/[^a-zA-Z_]+/,'_').underscore}.txt", "a+") do |fp|
-        fp.puts "## #{method.to_s.upcase} #{path}"
+        fp.puts "## #{method.to_s.upcase} #{pattern}"
         fp.puts
 
-        if request_type
+        if @response.request.options[:description]
+          fp.puts @response.request.options[:description].lstrip
+        end 
+
+        if request_type || (path != pattern) # path != pattern when there is a url pattern # TODO: Use better checks
           if request_type == "application/json"
             fp.puts "+ Request (#{request_type})"
-          elsif request_type == "x-www-form-urlencoded"
+          elsif request_type == "x-www-form-urlencoded" || (path != pattern)
             fp.puts "+ Parameters"
 
+            flattened_params = {}
             if @response.request.options[:body]
               flattened_params = @response.request.options[:body] ? @response.request.options[:body].flatten : {}
               flattened_params.each_pair do |k,v| 
-                fp.puts "    + #{CGI.escape(k)}: \"#{v.to_s}\" (#{v.class.name})"
+                description = nil
+                if @response.request.options[:parameter_descriptions]
+                  description = @response.request.options[:parameter_descriptions][k.to_s] || @response.request.options[:parameter_descriptions][k.to_sym]
+                end
+                fp.puts "    + #{CGI.escape(k)}: (#{v.class.name})#{description ? " - #{description}" : ""}"
               end
+            end
+
+            # This converts param_desc hash to an array ([[k1,v1],[k2,v2]]), removes any which are already in the body (and hence documented), and then convers back to hash
+            @response.request.options[:parameter_descriptions].to_a.map{|e| [e[0].to_s, e[1]]}.reject{|e| flattened_params.keys.include?(e[0])}.to_h.each_pair do |k,v|
+              fp.puts "    + #{CGI.escape(k)}: (String) - #{v}"
             end
           end
         end
