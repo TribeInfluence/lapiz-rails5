@@ -83,13 +83,8 @@ module Lapiz
   end
 
   def http_call(method, path_pattern, params, &block)
-    path = path_pattern
-    pattern = path_pattern
-
-    if // =~ path_pattern
-      path = path_pattern.gsub(/{([^{}]*)}/) { $1.split("=").last }       # path_pattern contains {field=default_value}. gsub it with default value 
-      pattern = path_pattern.gsub(/{([^{}]*)}/) { "{#{$1.split("=").first}}" }  # same as above, but gsub it with field
-    end
+    path = path_pattern.gsub(/{([^{}]*)}/) { $1.split("=").last }       # path_pattern contains {field=default_value}. gsub it with default value 
+    pattern = path_pattern.gsub(/{([^{}]*)}/) { "{#{$1.split("=").first}}" }  # same as above, but gsub it with field
 
     if block.nil?
       config = YAML.load(IO.read("config.yml"))
