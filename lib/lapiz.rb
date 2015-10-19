@@ -85,12 +85,18 @@ module Lapiz
   def http_call(method, path_pattern, params, &block)
     path = path_pattern.gsub(/{([^{}]*)}/) { # path_pattern contains {field=default_value}. gsub it with default value 
       if $1.start_with?("?")
-        $1
+        "?" + $1.sub("?","").split(",").join("&")
       else
         $1.split("=").last
       end
     }
-    pattern = path_pattern.gsub(/{([^{}]*)}/) { "{#{$1.split("=").first}}" }  # same as above, but gsub it with field
+    pattern = path_pattern.gsub(/{([^{}]*)}/) {  # same as above, but gsub it with field
+      if $1.start_with?("?")
+        "{?" + $1.sub("?","").split(",").map{ |e| e.split("=").first }.join(",") + "}"
+      else
+        "{#{$1.split("=").first}}"
+      end
+    }
 
     if pattern.start_with?("?")
       path = "#{pattern}=#{path}"
