@@ -204,7 +204,7 @@ RSpec.configure do |config|
       fp.puts config["meta"]["description"]
       fp.puts
       
-      Dir["api_docs/*.txt"].each do |f|
+      Dir["api_docs/*.txt"].sort.each do |f|
         IO.readlines(f).map(&:chomp).each do |line|
           fp.puts line
         end
