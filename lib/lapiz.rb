@@ -39,7 +39,7 @@ end
 module Lapiz
   def group(name, &block)
     describe(name) do
-      metadata[:group_name] = Rails.application.class.parent_name
+      metadata[:group_name] = name
 
       FileUtils.mkdir_p("api_docs")
       File.open("api_docs/#{name.gsub(/[^a-zA-Z_]+/,'_').underscore}.txt", "w+") do |fp|
@@ -51,23 +51,23 @@ module Lapiz
     end
   end
 
-  def get(path, params = {}, &block)
+  def GET(path, params = {}, &block)
     http_call(:get, path, params, &block)
   end
 
-  def post(path, params, &block)
+  def POST(path, params, &block)
     http_call(:post, path, params, &block)
   end
 
-  def patch(path, params, &block)
+  def PATCH(path, params, &block)
     http_call(:patch, path, params, &block)
   end
 
-  def put(path, params, &block)
+  def PUT(path, params, &block)
     http_call(:put, path, params, &block)
   end
 
-  def delete(path, params, &block)
+  def DELETE(path, params, &block)
     http_call(:delete, path, params, &block)
   end
 
@@ -92,25 +92,17 @@ module Lapiz
     end
 
     if block.nil?
-      config = YAML.load(IO.read("config.yml"))
-      base_uri = config["server"]["base_uri"]
-      return RSpec::Rails::Matchers::RoutingMatchers::RouteHelpers.send(method, path, params)
+      return self.send(method, path, params[:body], params[:headers])
     end
 
     it "tests action '#{pattern}'", self  do |group|
       expect {
-        @response = RSpec::Rails::Matchers::RoutingMatchers::RouteHelpers.send(method, path, params)
+        self.send(method, path, params[:body], params[:headers])
       }.to_not raise_error
-      instance_eval "def response;@response;end"
       instance_eval &block
 
       request_type = nil
       unless method == :head || method == :get
-        # Attempt to find request type
-        if @response.request.options[:headers]
-          request_type = @response.request.options[:headers]["Content-Type"]
-        end
-
         if  request_type.nil? # it was not set explicitly
           # if body is present, assume they meant x-www-form-urlencoded
           request_type = "x-www-form-urlencoded"
@@ -122,8 +114,8 @@ module Lapiz
         fp.puts "## #{method.to_s.upcase} #{pattern}"
         fp.puts
 
-        if @response.request.options[:description]
-          fp.puts @response.request.options[:description].lstrip
+        if params[:description]
+          fp.puts params[:description].lstrip
         end 
 
         if request_type || (path != pattern) # path != pattern when there is a url pattern # TODO: Use better checks
@@ -133,42 +125,42 @@ module Lapiz
             fp.puts "+ Parameters"
 
             flattened_params = {}
-            if @response.request.options[:body]
-              flattened_params = @response.request.options[:body] ? @response.request.options[:body].flatten : {}
+            if params[:body]
+              flattened_params = params[:body] ? params[:body].flatten : {}
               flattened_params.each_pair do |k,v| 
                 description = nil
-                if @response.request.options[:parameter_descriptions]
-                  description = @response.request.options[:parameter_descriptions][k.to_s] || @response.request.options[:parameter_descriptions][k.to_sym]
+                if params[:parameter_descriptions]
+                  description = params[:parameter_descriptions][k.to_s] || params[:parameter_descriptions][k.to_sym]
                 end
                 fp.puts "    + #{CGI.escape(k)}: (#{v.class.name})#{description ? " - #{description}" : ""}"
               end
             end
 
             # This converts param_desc hash to an array ([[k1,v1],[k2,v2]]), removes any which are already in the body (and hence documented), and then convers back to hash
-            @response.request.options[:parameter_descriptions].to_a.map{|e| [e[0].to_s, e[1]]}.reject{|e| flattened_params.keys.include?(e[0])}.to_h.each_pair do |k,v|
+            params[:parameter_descriptions].to_a.map{|e| [e[0].to_s, e[1]]}.reject{|e| flattened_params.keys.include?(e[0])}.to_h.each_pair do |k,v|
               fp.puts "    + #{CGI.escape(k)}: (String) - #{v}"
             end
           end
         end
 
-        if @response.request.options[:headers]
+        if params[:headers]
           fp.puts
           fp.puts "+ Request"
           fp.puts
           fp.puts "    + Headers"
           fp.puts
-          @response.request.options[:headers].each_pair  do |k,v|
+          params[:headers].each_pair  do |k,v|
             fp.puts "            #{k}: #{v}"
           end
           fp.puts
         end
 
-        if @response.body && (@response.code / 100 == 2)
+        if response.body && (response.status/100 == 2)
           fp.puts
-          fp.puts "+ Response #{@response.code} (#{@response.content_type})"
+          fp.puts "+ Response #{response.status} (#{response.content_type})"
           fp.puts 
 
-          hash = JSON.parse(@response.body)
+          hash = JSON.parse(response.body)
 
           fp.puts JSON.pretty_generate(hash).split("\n").map{ |line| "        #{line}" }.join("\n")
 
