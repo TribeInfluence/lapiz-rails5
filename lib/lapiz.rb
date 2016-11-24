@@ -181,16 +181,13 @@ end
 
 RSpec.configure do |config|
   config.after(:suite) do
-    config = YAML.load(IO.read("config.yml"))
-    base_uri = config["server"]["base_uri"]
-
     File.open("api_docs/api.md", "w+") do |fp| 
       fp.puts "FORMAT: 1A"
-      fp.puts "HOST: #{base_uri}"
+      fp.puts "HOST: https://ci.tribegroup.co"
       fp.puts
-      fp.puts "# #{config["meta"]["title"]}"
+      fp.puts "# Tribe Influencer API"
       fp.puts
-      fp.puts config["meta"]["description"]
+      fp.puts "Provides a REST-ful API for the Influencer actions"
       fp.puts
       
       Dir["api_docs/*.txt"].sort.each do |f|
