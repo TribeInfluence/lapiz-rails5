@@ -1,16 +1,7 @@
 require "lapiz/version"
 require "fileutils"
 require "cgi"
-
-class String
-  def underscore
-    self.gsub(/::/, '/').
-    gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
-    gsub(/([a-z\d])([A-Z])/,'\1_\2').
-    tr("-", "_").
-    downcase
-  end
-end
+require "yaml"
 
 class Hash
   def flatten
@@ -48,9 +39,7 @@ end
 module Lapiz
   def group(name, &block)
     describe(name) do
-      config = YAML.load(IO.read("config.yml"))
-      metadata[:base_uri] = config["server"]["base_uri"]
-      metadata[:group_name] = name
+      metadata[:group_name] = Rails.application.class.parent_name
 
       FileUtils.mkdir_p("api_docs")
       File.open("api_docs/#{name.gsub(/[^a-zA-Z_]+/,'_').underscore}.txt", "w+") do |fp|
@@ -105,12 +94,12 @@ module Lapiz
     if block.nil?
       config = YAML.load(IO.read("config.yml"))
       base_uri = config["server"]["base_uri"]
-      return HTTParty.send(method, base_uri + path, params)
+      return RSpec::Rails::Matchers::RoutingMatchers::RouteHelpers.send(method, path, params)
     end
 
     it "tests action '#{pattern}'", self  do |group|
       expect {
-        @response = HTTParty.send(method, group.metadata[:base_uri] + path, params)
+        @response = RSpec::Rails::Matchers::RoutingMatchers::RouteHelpers.send(method, path, params)
       }.to_not raise_error
       instance_eval "def response;@response;end"
       instance_eval &block
