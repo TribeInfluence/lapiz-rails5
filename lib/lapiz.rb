@@ -4,7 +4,7 @@ require "cgi"
 require "yaml"
 
 class Hash
-  def flatten
+  def flatten_for_params
     new_hash = self.dup
 
     while new_hash.values.map(&:class).include?(Hash)
@@ -126,7 +126,7 @@ module Lapiz
 
             flattened_params = {}
             if params[:body]
-              flattened_params = params[:body] ? params[:body].flatten : {}
+              flattened_params = params[:body] ? params[:body].flatten_for_params : {}
               flattened_params.each_pair do |k,v| 
                 description = nil
                 if params[:parameter_descriptions]
@@ -173,6 +173,7 @@ end
 
 RSpec.configure do |config|
   config.after(:suite) do
+    FileUtils.mkdir_p("api_docs")
     File.open("api_docs/api.md", "w+") do |fp| 
       fp.puts "FORMAT: 1A"
       fp.puts "HOST: https://ci.tribegroup.co"
