@@ -71,34 +71,25 @@ module Lapiz
     http_call(:delete, path, params, &block)
   end
 
-  def http_call(method, path_pattern, params, &block)
-    path = path_pattern.gsub(/{([^{}]*)}/) { # path_pattern contains {field=default_value}. gsub it with default value 
-      if $1.start_with?("?")
-        "?" + $1.sub("?","").split(",").join("&")
-      else
-        $1.split("=").last
-      end
-    }
-    pattern = path_pattern.gsub(/{([^{}]*)}/) {  # same as above, but gsub it with field
-      if $1.start_with?("?")
-        "{?" + $1.sub("?","").split(",").map{ |e| e.split("=").first }.join(",") + "}"
-      else
-        "{#{$1.split("=").first}}"
-      end
-    }
-
-    if pattern.start_with?("?")
-      path = "#{pattern}=#{path}"
-    end
-
-    if block.nil?
-      return self.send(method, path, params[:body], params[:headers])
-    end
-
+  def http_call(method, pattern, params, &block)
     it "tests action '#{pattern}'", self  do |group|
-      expect {
-        self.send(method, path, params[:body], params[:headers])
-      }.to_not raise_error
+      @_method = method
+      @_pattern = pattern
+      @_params = params
+
+      instance_eval do
+        def invoke_api(args = {})
+          path = @_pattern
+          args.each_pair do |arg_name, arg_value|
+            path = path.gsub( "{#{arg_name}}", arg_value.to_s )
+          end
+
+          expect {
+            self.send(@_method, path, @_params[:body], @_params[:headers])
+          }.to_not raise_error
+        end
+      end
+
       instance_eval &block
 
       request_type = nil
