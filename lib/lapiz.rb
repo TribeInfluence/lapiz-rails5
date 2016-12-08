@@ -73,8 +73,7 @@ module Lapiz
 
   def http_call(method, pattern, params, &block)
     if block.nil?
-      send(method, pattern, params[:body], params[:headers])
-      return
+      return send(method, pattern, params[:body], params[:headers])
     end
 
     it "tests action '#{pattern}'", self  do |group|
