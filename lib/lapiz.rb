@@ -151,11 +151,13 @@ module Lapiz
           fp.puts "+ Response #{response.status} (#{response.content_type})"
           fp.puts 
 
-          hash = JSON.parse(response.body)
+          unless response.body.blank?
+            hash = JSON.parse(response.body)
 
-          fp.puts JSON.pretty_generate(hash).split("\n").map{ |line| "        #{line}" }.join("\n")
+            fp.puts JSON.pretty_generate(hash).split("\n").map{ |line| "        #{line}" }.join("\n")
 
-          fp.puts
+            fp.puts
+          end
         end
       end
     end
