@@ -89,7 +89,7 @@ module Lapiz
           end
 
           expect {
-            self.send(@_method, path, @_params[:body], @_params[:headers])
+            self.send(@_method, path, (@_params[:body] || {}).merge( args[:body] || {} ), @_params[:headers])
           }.to_not raise_error
         end
       end
