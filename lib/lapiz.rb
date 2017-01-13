@@ -88,8 +88,10 @@ module Lapiz
             path = path.gsub( "{#{arg_name}}", arg_value.to_s )
           end
 
+          body = args[:body] || @_params[:body]
+
           expect {
-            self.send(@_method, path, (@_params[:body] || {}).merge( args[:body] || {} ), @_params[:headers])
+            self.send(@_method, path, body, @_params[:headers])
           }.to_not raise_error
         end
       end
