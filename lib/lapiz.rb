@@ -84,6 +84,7 @@ module Lapiz
       instance_eval do
         def invoke_api(args = {})
           path = @_pattern
+          @args = args
           args.each_pair do |arg_name, arg_value|
             path = path.gsub( "{#{arg_name}}", arg_value.to_s )
           end
@@ -100,7 +101,9 @@ module Lapiz
 
       request_type = nil
       unless method == :head || method == :get
-        if  request_type.nil? # it was not set explicitly
+        if request.headers["Content-Type"].present?
+          request_type = request.headers["Content-Type"]
+        elsif request_type.nil? # it was not set explicitly
           # if body is present, assume they meant x-www-form-urlencoded
           request_type = "x-www-form-urlencoded"
         end
@@ -118,6 +121,17 @@ module Lapiz
         if request_type || (path != pattern) # path != pattern when there is a url pattern # TODO: Use better checks
           if request_type == "application/json"
             fp.puts "+ Request (#{request_type})"
+
+            body = params[:body] || @args[:body]
+
+            if body.present?
+              body_hash = JSON.parse(body)
+              pretty_body = JSON.pretty_generate(body_hash)
+
+              pretty_body.split("\n").each do |pl|
+                fp.puts "        #{ pl.chomp }"
+              end
+            end
           elsif request_type == "x-www-form-urlencoded" || (path != pattern)
             fp.puts "+ Parameters"
 
