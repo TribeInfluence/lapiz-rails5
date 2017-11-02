@@ -165,7 +165,7 @@ module Lapiz
         if response.body && (response.status/100 == 2)
           fp.puts
           fp.puts "+ Response #{response.status} (#{response.content_type})"
-          fp.puts 
+          fp.puts
 
           unless response.body.blank?
             hash = JSON.parse(response.body)
@@ -181,6 +181,12 @@ module Lapiz
 end
 
 RSpec.configure do |config|
+  config.before(:suite) do
+    Dir["api_docs/*.txt"].each do |f|
+      FileUtils.rm(f)
+    end
+  end
+
   config.after(:suite) do
     FileUtils.mkdir_p("api_docs")
     File.open("api_docs/api.md", "w+") do |fp| 
