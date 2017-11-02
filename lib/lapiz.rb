@@ -37,20 +37,6 @@ class Hash
 end
 
 module Lapiz
-  def group(name, &block)
-    describe(name) do
-      metadata[:group_name] = name
-
-      FileUtils.mkdir_p("api_docs")
-      File.open("api_docs/#{name.gsub(/[^a-zA-Z_]+/,'_').underscore}.txt", "w+") do |fp|
-        fp.puts "# Group #{name}"
-        fp.puts
-      end
-
-      instance_eval &block
-    end
-  end
-
   def GET(path, params = {}, &block)
     http_call(:get, path, params, &block)
   end
@@ -76,7 +62,7 @@ module Lapiz
       return send(method, pattern, params[:body], params[:headers])
     end
 
-    it "tests action '#{pattern}'", self  do |group|
+    it "tests action '#{pattern}'", self  do |example|
       @_method = method
       @_pattern = pattern
       @_params = params
@@ -109,14 +95,24 @@ module Lapiz
         end
       end
 
-      group_name = group.metadata[:group_name]
-      File.open("api_docs/#{group_name.gsub(/[^a-zA-Z_]+/,'_').underscore}.txt", "a+") do |fp|
+      group_name = example.example_group.metadata[:description]
+      file_name = group_name.gsub(/[^a-zA-Z_]+/,'_').underscore
+
+      unless File.exists?("api_docs/#{ file_name }.txt")
+        FileUtils.mkdir_p("api_docs")
+        File.open("api_docs/#{file_name}.txt", "w+") do |fp|
+          fp.puts "# Group #{group_name}"
+          fp.puts
+        end
+      end
+
+      File.open("api_docs/#{file_name}.txt", "a+") do |fp|
         fp.puts "## #{method.to_s.upcase} #{pattern}"
         fp.puts
 
         if params[:description]
           fp.puts params[:description].lstrip
-        end 
+        end
 
         if request_type || (path != pattern) # path != pattern when there is a url pattern # TODO: Use better checks
           if request_type == "application/json"
@@ -195,7 +191,7 @@ RSpec.configure do |config|
       fp.puts
       fp.puts "Provides a REST-ful API for the Influencer actions"
       fp.puts
-      
+
       Dir["api_docs/*.txt"].sort.each do |f|
         IO.readlines(f).map(&:chomp).each do |line|
           fp.puts line
