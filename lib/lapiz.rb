@@ -128,7 +128,7 @@ module Lapiz
                 fp.puts "        #{ pl.chomp }"
               end
             end
-          elsif request_type == "x-www-form-urlencoded" || (path != pattern)
+          elsif request_type == "x-www-form-urlencoded" || request_type&.start_with?('multipart/form-data') || (path != pattern)
             fp.puts "+ Parameters"
 
             flattened_params = {}
@@ -139,13 +139,13 @@ module Lapiz
                 if params[:parameter_descriptions]
                   description = params[:parameter_descriptions][k.to_s] || params[:parameter_descriptions][k.to_sym]
                 end
-                fp.puts "    + #{CGI.escape(k)}: (#{v.class.name})#{description ? " - #{description}" : ""}"
+                fp.puts "    + #{ k }: (#{v.class.name})#{description ? " - #{description}" : ""}"
               end
             end
 
             # This converts param_desc hash to an array ([[k1,v1],[k2,v2]]), removes any which are already in the body (and hence documented), and then convers back to hash
             params[:parameter_descriptions].to_a.map{|e| [e[0].to_s, e[1]]}.reject{|e| flattened_params.keys.include?(e[0])}.to_h.each_pair do |k,v|
-              fp.puts "    + #{CGI.escape(k)}: (String) - #{v}"
+              fp.puts "    + #{ k }: (String) - #{v}"
             end
           end
         end
