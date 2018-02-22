@@ -75,6 +75,8 @@ module Lapiz
             path = path.gsub( "{#{arg_name}}", arg_value.to_s )
           end
 
+          @_params[:headers] = (@_params[:headers] || {}).merge(args[:headers] || {})
+
           body = args[:body] || @_params[:body]
 
           expect {
