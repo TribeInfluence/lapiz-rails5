@@ -116,7 +116,7 @@ module Lapiz
           fp.puts params[:description].lstrip
         end
 
-        if request_type || (path != pattern) # path != pattern when there is a url pattern # TODO: Use better checks
+        if request_type
           if request_type == "application/json"
             fp.puts "+ Request (#{request_type})"
 
