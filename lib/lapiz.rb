@@ -93,7 +93,7 @@ module Lapiz
           request_type = request.headers["Content-Type"]
         elsif request_type.nil? # it was not set explicitly
           # if body is present, assume they meant x-www-form-urlencoded
-          request_type = "x-www-form-urlencoded"
+          request_type = 'application/x-www-form-urlencoded'
         end
       end
 
@@ -130,7 +130,7 @@ module Lapiz
                 fp.puts "        #{ pl.chomp }"
               end
             end
-          elsif request_type == "x-www-form-urlencoded" || request_type&.start_with?('multipart/form-data') || (path != pattern)
+          elsif request_type == 'application/x-www-form-urlencoded' || request_type&.start_with?('multipart/form-data') || (path != pattern)
             fp.puts "+ Parameters"
 
             flattened_params = {}
