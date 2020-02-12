@@ -1,27 +1,43 @@
-# coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'lapiz/version'
+# -*- encoding: utf-8 -*-
+# stub: lapiz 1.1.4 ruby lib
 
-Gem::Specification.new do |spec|
-  spec.name          = "lapiz"
-  spec.version       = Lapiz::VERSION
-  spec.authors       = ["Ajith Hussain"]
-  spec.email         = ["csy0013@googlemail.com"]
+Gem::Specification.new do |s|
+  s.name = "lapiz".freeze
+  s.version = "1.1.4"
 
-  spec.summary       = %q{API testing DSL for RSpec}
-  spec.description   = %q{Lapiz is an API testing DSL for RSpec which also generates APIBlueprint files that are compatible with apiary.io}
-  spec.homepage      = "https://github.com/sparkymat/lapiz"
-  spec.license       = "MIT"
+  s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
+  s.require_paths = ["lib".freeze]
+  s.authors = ["Ajith Hussain".freeze]
+  s.bindir = "exe".freeze
+  s.date = "2020-02-09"
+  s.description = "Lapiz is an API testing DSL for RSpec which also generates APIBlueprint files that are compatible with apiary.io".freeze
+  s.email = ["csy0013@googlemail.com".freeze]
+  s.files = [".gitignore".freeze, "Gemfile".freeze, "LICENSE.txt".freeze, "README.md".freeze, "Rakefile".freeze, "bin/console".freeze, "bin/setup".freeze, "lapiz.gemspec".freeze, "lib/lapiz.rb".freeze, "lib/lapiz/version.rb".freeze]
+  s.homepage = "https://github.com/sparkymat/lapiz".freeze
+  s.licenses = ["MIT".freeze]
+  s.rubygems_version = "2.6.12".freeze
+  s.summary = "API testing DSL for RSpec".freeze
 
-  spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.bindir        = "exe"
-  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
-  spec.require_paths = ["lib"]
+  s.installed_by_version = "2.6.12" if s.respond_to? :installed_by_version
 
-  spec.add_development_dependency "bundler", "~> 1.10"
-  spec.add_development_dependency "rake", "~> 10.0"
+  if s.respond_to? :specification_version then
+    s.specification_version = 4
 
-  spec.add_dependency 'rspec'
-  spec.add_dependency 'rails'
+    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_development_dependency(%q<bundler>.freeze, ["~> 1.10"])
+      s.add_development_dependency(%q<rake>.freeze, ["~> 10.0"])
+      s.add_runtime_dependency(%q<rspec>.freeze, [">= 0"])
+      s.add_runtime_dependency(%q<rails>.freeze, [">= 0"])
+    else
+      s.add_dependency(%q<bundler>.freeze, ["~> 1.10"])
+      s.add_dependency(%q<rake>.freeze, ["~> 10.0"])
+      s.add_dependency(%q<rspec>.freeze, [">= 0"])
+      s.add_dependency(%q<rails>.freeze, [">= 0"])
+    end
+  else
+    s.add_dependency(%q<bundler>.freeze, ["~> 1.10"])
+    s.add_dependency(%q<rake>.freeze, ["~> 10.0"])
+    s.add_dependency(%q<rspec>.freeze, [">= 0"])
+    s.add_dependency(%q<rails>.freeze, [">= 0"])
+  end
 end
